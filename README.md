@@ -1,103 +1,94 @@
-# GIS Converter Desktop
+# 🗺️ Universal GIS Vector Converter Desktop
 
-Aplikasi desktop berbasis Python dan PySide6 untuk konversi file GIS:
+Aplikasi desktop modern berbasis Python dan PySide6 untuk konversi multi-arah (*Any-to-Any*) berbagai format data spasial/GIS vektor dengan dukungan sistem koordinat (CRS) kustom dan akselerasi performa tinggi.
 
-- TAB → SHP
-- TAB → GeoJSON
-- SHP → GeoJSON
+---
 
-Aplikasi ini membaca file utama `.tab` atau `.shp` dan, bila tersedia, ikut memanfaatkan file pendukung yang berada di folder yang sama.
+## ✨ Fitur Unggulan
 
-## Screenshot
+- **Dukungan Format Luas (Any-to-Any)**:
+  - **Input**: Shapefile (`.shp`), MapInfo (`.tab`, `.mif`), GeoJSON (`.geojson`, `.json`), GeoPackage (`.gpkg`), KML/KMZ (`.kml`, `.kmz`), GPX (`.gpx`), AutoCAD DXF (`.dxf`), FlatGeobuf (`.fgb`), CSV (`.csv` dengan koordinat lon/lat atau WKT), serta **Arsip ZIP (`.zip`)**.
+  - **Output**: GeoJSON, ESRI Shapefile, GeoPackage (`.gpkg`), MapInfo TAB, KML, FlatGeobuf, dan CSV (WKT).
+- **Auto-Detect Arsip ZIP**: Drag & drop file `.zip` (misal arsip Shapefile lengkap) langsung diproses secara otomatis.
+- **Sistem Koordinat (CRS) & Reprojection**:
+  - Pertahankan CRS Asli (*Keep Original*).
+  - WGS 84 (`EPSG:4326`) untuk GPS / Web GeoJSON.
+  - Web Mercator (`EPSG:3857`) untuk peta online (Google Maps, OSM).
+  - Preset UTM Indonesia (Zone 46S s/d 54S).
+  - Custom EPSG code input.
+- **Dukungan Encoding Atribut**: UTF-8, Windows-1252 / CP1252 (untuk Shapefile lawas), dan ISO-8859-1.
+- **Performa Cepat**: Didukung oleh engine `pyogrio` & `GDAL` untuk pembacaan dan penulisan dataset besar.
+- **Cross-Platform**: Menggunakan Qt Desktop Services untuk membuka folder hasil di Linux, Windows, maupun macOS.
+- **Fitur Batal / Cancel**: Pembatalan proses batch di tengah jalan tanpa membuat aplikasi hang.
 
-Kalau kamu menaruh file gambar di `assets/screenshot.png`, README ini akan menampilkan tampilan aplikasi di sini:
+---
 
-![Tampilan GIS Converter Desktop](assets/app.png)
+## 🛠️ Prasyarat & Instalasi
 
-## Prasyarat
+### 1. Prasyarat Sistem
+- Python 3.10+ (direkomendasikan Python 3.12)
+- Linux / Windows / macOS
 
-- Linux
-- Python 3.12
-- `pip`
-- `venv`
+### 2. Setup Virtual Environment
 
-Jika kamu memakai Ubuntu/Debian, contoh instalasi Python 3.12 dan tool pendukung dasarnya:
+1. Masuk ke direktori project:
+   ```bash
+   cd /home/lenovo/Projects/Geojson-converter
+   ```
 
-```bash
-sudo apt update
-sudo apt install -y python3.12 python3.12-venv python3-pip
-```
+2. Buat virtual environment:
+   ```bash
+   python3 -m venv venv_gis
+   ```
 
-Jika paket `python3.12` belum tersedia di distro kamu, kamu bisa memakai `pyenv` atau source resmi Python 3.12.
+3. Aktifkan virtual environment:
+   - **Linux / macOS**:
+     ```bash
+     source venv_gis/bin/activate
+     ```
+   - **Windows**:
+     ```cmd
+     venv_gis\Scripts\activate
+     ```
 
-## Setup Project
+4. Install dependencies:
+   ```bash
+   pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
 
-1. Masuk ke folder project.
+---
 
-```bash
-cd /home/lenovo/Projects/gis-converter-desktop
-```
+## 🚀 Menjalankan Aplikasi
 
-2. Buat virtual environment.
-
-```bash
-python3.12 -m venv venv_gis
-```
-
-Kalau `python3.12` tidak dikenali, pastikan instalasi Python 3.12 sudah benar. Kamu juga bisa cek dengan:
-
-```bash
-python3.12 --version
-```
-
-3. Aktifkan virtual environment.
-
-```bash
-source venv_gis/bin/activate
-```
-
-4. Upgrade `pip` lalu install requirements.
-
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-## Menjalankan Aplikasi
-
-Setelah dependency selesai terpasang, jalankan:
+Pastikan virtual environment telah aktif, lalu jalankan:
 
 ```bash
 python main.py
 ```
 
-Jendela aplikasi akan terbuka. Dari sana kamu bisa:
+### Cara Penggunaan:
+1. **Pilih File Input**: Drag & drop file atau klik tombol **Tambah File / ZIP** atau **Tambah Folder**.
+2. **Atur Target & CRS**:
+   - Pilih format output target (misal GeoJSON, GPKG, Shapefile, KML, dll).
+   - Pilih target CRS (misal WGS 84 `EPSG:4326` atau UTM Zone).
+   - Pilih encoding atribut bila diperlukan.
+3. **Pilih Folder Output**: Tentukan folder penyimpanan hasil.
+4. **Mulai Konversi**: Klik **Mulai Konversi**. Log status dan progress bar akan memantau proses secara *real-time*.
 
-- pilih file GIS dengan tombol **Pilih File**
-- pilih folder output
-- tentukan mode konversi
-- klik **Konversi** untuk mulai proses
+---
 
-## Format File yang Didukung
+## 📦 Format File yang Didukung
 
-- Input TAB: `.tab` dengan file pendukung seperti `.dat`, `.map`, `.id`, dan `.ind` di folder yang sama
-- Input SHP: `.shp` dengan file pendukung seperti `.shx`, `.dbf`, dan `.prj` di folder yang sama
-
-## Catatan Output
-
-- Hasil konversi akan disimpan ke folder output yang kamu pilih.
-- Untuk mode GeoJSON, aplikasi akan mencoba mengubah CRS ke `EPSG:4326` jika CRS input berbeda.
-- Tombol **Buka Folder Output** memakai `xdg-open`, jadi ini paling nyaman digunakan di Linux desktop.
-
-## Menonaktifkan Virtual Environment
-
-Kalau sudah selesai, keluar dari environment dengan:
-
-```bash
-deactivate
-```
-
-## Troubleshooting
-
-- Jika muncul error modul tidak ditemukan, pastikan virtual environment sudah aktif sebelum menjalankan `pip install` dan `python main.py`.
-- Jika instalasi `geopandas`, `fiona`, atau `pyproj` gagal di Linux, coba pastikan paket dasar build tools dan library GIS dari distro kamu tersedia, lalu ulangi instalasi requirements.
+| Format | Ekstensi Input | Driver Output |
+| :--- | :--- | :--- |
+| **ESRI Shapefile** | `.shp`, `.zip` | `ESRI Shapefile` |
+| **MapInfo** | `.tab`, `.mif` | `MapInfo File` |
+| **GeoJSON** | `.geojson`, `.json` | `GeoJSON` |
+| **GeoPackage** | `.gpkg` | `GPKG` |
+| **Google Earth KML/KMZ** | `.kml`, `.kmz` | `KML` |
+| **GPS Exchange** | `.gpx` | - |
+| **AutoCAD DXF** | `.dxf` | - |
+| **FlatGeobuf** | `.fgb` | `FlatGeobuf` |
+| **CSV Coordinates / WKT**| `.csv` | `CSV` (with WKT) |
+| **Arsip ZIP** | `.zip` | Diekstrak otomatis |

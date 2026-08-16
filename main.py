@@ -76,27 +76,27 @@ OUTPUT_FORMATS = {
 }
 
 CRS_PRESETS = [
-    ("Biarkan Asli (Keep Original)", None),
-    ("WGS 84 (EPSG:4326 - Derajat Desimal / GPS / GeoJSON)", "EPSG:4326"),
+    ("Keep Original", None),
+    ("WGS 84 (EPSG:4326 - Decimal Degrees / GPS / GeoJSON)", "EPSG:4326"),
     ("Web Mercator (EPSG:3857 - Google Maps / OSM)", "EPSG:3857"),
-    ("Indonesia UTM Zone 46S (EPSG:32746 - Aceh, Sumbar)", "EPSG:32746"),
-    ("Indonesia UTM Zone 47S (EPSG:32747 - Sumut, Riau, Jambi)", "EPSG:32747"),
-    ("Indonesia UTM Zone 48S (EPSG:32748 - Sumsel, Lampung, Jabar, Jakarta)", "EPSG:32748"),
-    ("Indonesia UTM Zone 49S (EPSG:32749 - Jateng, DIY, Jatim, Bali, NTB Barat)", "EPSG:32749"),
-    ("Indonesia UTM Zone 50S (EPSG:32750 - NTB Timur, NTT Barat, Kalsel, Kaltim)", "EPSG:32750"),
-    ("Indonesia UTM Zone 51S (EPSG:32751 - NTT Timur, Sulsel, Sulbar, Sulteng)", "EPSG:32751"),
-    ("Indonesia UTM Zone 52S (EPSG:32752 - Sultra, Maluku, Papua Barat)", "EPSG:32752"),
-    ("Indonesia UTM Zone 53S (EPSG:32753 - Papua Tengah)", "EPSG:32753"),
-    ("Indonesia UTM Zone 54S (EPSG:32754 - Papua Timur)", "EPSG:32754"),
+    ("Indonesia UTM Zone 46S (EPSG:32746 - Aceh, W. Sumatra)", "EPSG:32746"),
+    ("Indonesia UTM Zone 47S (EPSG:32747 - N. Sumatra, Riau, Jambi)", "EPSG:32747"),
+    ("Indonesia UTM Zone 48S (EPSG:32748 - S. Sumatra, Lampung, W. Java, Jakarta)", "EPSG:32748"),
+    ("Indonesia UTM Zone 49S (EPSG:32749 - Central Java, DIY, E. Java, Bali, W. NTB)", "EPSG:32749"),
+    ("Indonesia UTM Zone 50S (EPSG:32750 - E. NTB, W. NTT, S. & E. Kalimantan)", "EPSG:32750"),
+    ("Indonesia UTM Zone 51S (EPSG:32751 - E. NTT, S., W., & C. Sulawesi)", "EPSG:32751"),
+    ("Indonesia UTM Zone 52S (EPSG:32752 - SE Sulawesi, Maluku, W. Papua)", "EPSG:32752"),
+    ("Indonesia UTM Zone 53S (EPSG:32753 - Central Papua)", "EPSG:32753"),
+    ("Indonesia UTM Zone 54S (EPSG:32754 - East Papua)", "EPSG:32754"),
     ("Custom EPSG Code...", "CUSTOM")
 ]
 
 
 # ============================================================
-# HELPER FUNCTIONS UNTUK PEMBACAAN & PENULISAN GIS
+# GIS READING & WRITING HELPER FUNCTIONS
 # ============================================================
 def extract_zip_layers(zip_path, temp_dir):
-    """Mengekstrak file ZIP dan mengembalikan list file GIS utama yang ditemukan."""
+    """Extract ZIP archive and return list of primary GIS files found."""
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(temp_dir)
 
@@ -110,7 +110,7 @@ def extract_zip_layers(zip_path, temp_dir):
 
 
 def read_gis_file(file_path, encoding=None):
-    """Membaca file GIS menggunakan pyogrio / geopandas / pandas secara fleksibel."""
+    """Read GIS file using pyogrio / geopandas / pandas flexibly."""
     ext = Path(file_path).suffix.lower()
 
     # 1. KMZ Handling
@@ -121,7 +121,7 @@ def read_gis_file(file_path, encoding=None):
                 zip_ref.extractall(temp_kmz_dir)
             kml_files = [os.path.join(r, f) for r, _, fs in os.walk(temp_kmz_dir) for f in fs if f.endswith('.kml')]
             if not kml_files:
-                raise ValueError("Tidak ada file KML di dalam arsip KMZ.")
+                raise ValueError("No KML file found inside KMZ archive.")
             gdf = gpd.read_file(kml_files[0])
             return gdf
         finally:
@@ -145,7 +145,7 @@ def read_gis_file(file_path, encoding=None):
                 crs="EPSG:4326"
             )
             return gdf
-        raise ValueError("File CSV tidak memiliki kolom koordinat (lon/lat) atau geometri WKT.")
+        raise ValueError("CSV file does not contain coordinate columns (lon/lat) or WKT geometry.")
 
     # 3. GPX Handling
     if ext == '.gpx':
@@ -169,7 +169,7 @@ def read_gis_file(file_path, encoding=None):
 
 
 def sanitize_for_shapefile(gdf):
-    """Sanitasi kolom dan geometri agar sesuai dengan spesifikasi ESRI Shapefile."""
+    """Sanitize columns and geometry to conform to ESRI Shapefile specifications."""
     gdf = gdf.copy()
 
     for col in gdf.columns:
@@ -185,7 +185,7 @@ def sanitize_for_shapefile(gdf):
 
 
 # ============================================================
-# THREAD KONVERSI
+# CONVERSION THREAD
 # ============================================================
 class ConverterThread(QThread):
     progress = Signal(str)
@@ -207,8 +207,8 @@ class ConverterThread(QThread):
     def run(self):
         format_info = OUTPUT_FORMATS.get(self.target_format_key)
         if not format_info:
-            self.progress.emit("[ERROR] Format output tidak valid.")
-            self.finished.emit(False, "Format output tidak dikenali.")
+            self.progress.emit("[ERROR] Invalid output format.")
+            self.finished.emit(False, "Unrecognized output format.")
             return
 
         target_ext = format_info['ext']
@@ -219,17 +219,17 @@ class ConverterThread(QThread):
         success_count = 0
         fail_count = 0
 
-        self.progress.emit(f"Memulai konversi {total_files} file ke format {self.target_format_key}...\n")
+        self.progress.emit(f"Starting conversion of {total_files} file(s) to {self.target_format_key}...\n")
 
         for idx, file_path in enumerate(self.input_files, 1):
             if self._is_cancelled:
-                self.progress.emit("\n[BATAL] Proses konversi dibatalkan oleh pengguna.")
-                self.finished.emit(False, "Dibatalkan oleh pengguna.")
+                self.progress.emit("\n[CANCELLED] Conversion cancelled by user.")
+                self.finished.emit(False, "Cancelled by user.")
                 return
 
             file_p = Path(file_path)
             base_name = file_p.stem
-            self.progress.emit(f"[{idx}/{total_files}] Memproses: {file_p.name}")
+            self.progress.emit(f"[{idx}/{total_files}] Processing: {file_p.name}")
 
             temp_extract_dir = None
             try:
@@ -237,28 +237,28 @@ class ConverterThread(QThread):
                     temp_extract_dir = tempfile.mkdtemp(prefix="gis_zip_")
                     sub_files = extract_zip_layers(file_path, temp_extract_dir)
                     if not sub_files:
-                        raise ValueError("Tidak ditemukan file GIS (.shp, .tab, .gpkg, dll) di dalam ZIP.")
+                        raise ValueError("No GIS files (.shp, .tab, .gpkg, etc.) found inside ZIP archive.")
                     read_target = sub_files[0]
-                    self.progress.emit(f"   Ditemukan layer di ZIP: {Path(read_target).name}")
+                    self.progress.emit(f"   Found layer in ZIP: {Path(read_target).name}")
                 else:
                     read_target = file_path
 
                 gdf = read_gis_file(read_target, encoding=self.encoding)
                 if gdf is None or gdf.empty:
-                    raise ValueError("Layer kosong atau tidak memiliki data geometri valid.")
+                    raise ValueError("Layer is empty or contains no valid geometry data.")
 
                 feature_count = len(gdf)
                 geom_types = ", ".join(gdf.geometry.geom_type.dropna().unique())
-                curr_crs = str(gdf.crs) if gdf.crs else "Tidak terdefinisi"
-                self.progress.emit(f"   Info Data: {feature_count} fitur | Tipe: {geom_types} | CRS: {curr_crs}")
+                curr_crs = str(gdf.crs) if gdf.crs else "Undefined"
+                self.progress.emit(f"   Data Info: {feature_count} features | Type: {geom_types} | CRS: {curr_crs}")
 
                 final_crs = self.target_crs or force_crs
                 if final_crs:
                     if gdf.crs is None:
-                        self.progress.emit(f"   Menetapkan CRS: {final_crs}...")
+                        self.progress.emit(f"   Setting CRS: {final_crs}...")
                         gdf = gdf.set_crs(final_crs, allow_override=True)
                     elif str(gdf.crs).upper() != str(final_crs).upper():
-                        self.progress.emit(f"   Reproyeksi CRS ke: {final_crs}...")
+                        self.progress.emit(f"   Reprojecting CRS to: {final_crs}...")
                         gdf = gdf.to_crs(final_crs)
 
                 output_path = os.path.join(self.output_dir, f"{base_name}{target_ext}")
@@ -290,11 +290,11 @@ class ConverterThread(QThread):
                     except Exception:
                         gdf.to_file(output_path, driver=target_driver)
 
-                self.progress.emit(f"   [OK] Tersimpan: {Path(output_path).name}\n")
+                self.progress.emit(f"   [OK] Saved: {Path(output_path).name}\n")
                 success_count += 1
 
             except Exception as e:
-                self.progress.emit(f"   [GAGAL] {str(e)}\n")
+                self.progress.emit(f"   [FAILED] {str(e)}\n")
                 fail_count += 1
             finally:
                 if temp_extract_dir and os.path.exists(temp_extract_dir):
@@ -302,7 +302,7 @@ class ConverterThread(QThread):
 
             self.progress_bar.emit(int((idx / total_files) * 100))
 
-        summary = f"Selesai: {success_count} berhasil, {fail_count} gagal dari total {total_files} file."
+        summary = f"Finished: {success_count} succeeded, {fail_count} failed out of {total_files} file(s)."
         self.progress.emit("=" * 60)
         self.progress.emit(summary)
         self.finished.emit(success_count > 0, summary)
@@ -349,7 +349,7 @@ class MainWindow(QMainWindow):
         lbl_title = QLabel("Universal GIS Vector Converter")
         lbl_title.setObjectName("headerTitle")
 
-        lbl_subtitle = QLabel("Konversi multi-format spasial: TAB, SHP, GeoJSON, GeoPackage, KML/KMZ, GPX, DXF, CSV, dan FlatGeobuf.")
+        lbl_subtitle = QLabel("Multi-format spatial vector conversion: TAB, SHP, GeoJSON, GeoPackage, KML/KMZ, GPX, DXF, CSV, and FlatGeobuf.")
         lbl_subtitle.setObjectName("headerSubtitle")
 
         header_layout.addWidget(lbl_title)
@@ -359,7 +359,7 @@ class MainWindow(QMainWindow):
         # ----------------------------------------------------
         # 1. GROUP BOX: INPUT FILES (DROP ZONE)
         # ----------------------------------------------------
-        group_input = QGroupBox("1. File Input (Drag and Drop / Pilih File / Arsip ZIP)")
+        group_input = QGroupBox("1. Input Files (Drag & Drop / Select Files / ZIP Archives)")
         layout_input = QVBoxLayout(group_input)
         layout_input.setSpacing(10)
 
@@ -371,16 +371,16 @@ class MainWindow(QMainWindow):
         self.file_list_widget.installEventFilter(self)
         layout_input.addWidget(self.file_list_widget, stretch=1)
 
-        # Tombol File Input
+        # Input File Buttons
         btn_box = QHBoxLayout()
         btn_box.setSpacing(8)
-        btn_add = QPushButton("Tambah File / ZIP")
+        btn_add = QPushButton("Add Files / ZIP")
         btn_add.clicked.connect(self.add_files_dialog)
-        btn_add_folder = QPushButton("Tambah Folder")
+        btn_add_folder = QPushButton("Add Folder")
         btn_add_folder.clicked.connect(self.add_folder_dialog)
-        btn_del = QPushButton("Hapus Pilihan")
+        btn_del = QPushButton("Remove Selected")
         btn_del.clicked.connect(self.remove_selected)
-        btn_clear = QPushButton("Kosongkan Daftar")
+        btn_clear = QPushButton("Clear List")
         btn_clear.clicked.connect(self.clear_all)
 
         btn_box.addWidget(btn_add)
@@ -392,15 +392,15 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(group_input, stretch=3)
 
         # ----------------------------------------------------
-        # 2. GROUP BOX: PENGATURAN TARGET & CRS
+        # 2. GROUP BOX: TARGET & CRS SETTINGS
         # ----------------------------------------------------
-        group_settings = QGroupBox("2. Pengaturan Target dan Sistem Koordinat (CRS)")
+        group_settings = QGroupBox("2. Target Format & Coordinate Reference System (CRS)")
         layout_settings = QVBoxLayout(group_settings)
         layout_settings.setSpacing(10)
 
         # Target Format Row
         row_target = QHBoxLayout()
-        lbl_target = QLabel("Format Output:")
+        lbl_target = QLabel("Output Format:")
         lbl_target.setFixedWidth(160)
         self.combo_target = QComboBox()
         self._setup_combobox(self.combo_target)
@@ -412,7 +412,7 @@ class MainWindow(QMainWindow):
 
         # CRS Reprojection Row
         row_crs = QHBoxLayout()
-        lbl_crs = QLabel("Sistem Koordinat (CRS):")
+        lbl_crs = QLabel("Coordinate System (CRS):")
         lbl_crs.setFixedWidth(160)
         self.combo_crs = QComboBox()
         self._setup_combobox(self.combo_crs)
@@ -421,7 +421,7 @@ class MainWindow(QMainWindow):
         self.combo_crs.currentIndexChanged.connect(self.on_crs_changed)
 
         self.txt_custom_epsg = QLineEdit()
-        self.txt_custom_epsg.setPlaceholderText("Contoh: EPSG:32748 atau 4326")
+        self.txt_custom_epsg.setPlaceholderText("e.g. EPSG:32748 or 4326")
         self.txt_custom_epsg.setVisible(False)
         self.txt_custom_epsg.setFixedWidth(200)
 
@@ -432,12 +432,12 @@ class MainWindow(QMainWindow):
 
         # Encoding Row
         row_enc = QHBoxLayout()
-        lbl_enc = QLabel("Encoding Atribut:")
+        lbl_enc = QLabel("Attribute Encoding:")
         lbl_enc.setFixedWidth(160)
         self.combo_enc = QComboBox()
         self._setup_combobox(self.combo_enc)
         self.combo_enc.addItem("Auto-Detect / UTF-8", "utf-8")
-        self.combo_enc.addItem("Windows-1252 / CP1252 (Shapefile Lama)", "cp1252")
+        self.combo_enc.addItem("Windows-1252 / CP1252 (Legacy Shapefile)", "cp1252")
         self.combo_enc.addItem("ISO-8859-1 / Latin-1", "latin1")
         row_enc.addWidget(lbl_enc)
         row_enc.addWidget(self.combo_enc)
@@ -446,34 +446,34 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(group_settings, stretch=0)
 
         # ----------------------------------------------------
-        # 3. GROUP BOX: FOLDER OUTPUT & EKSEKUSI
+        # 3. GROUP BOX: OUTPUT FOLDER & EXECUTION
         # ----------------------------------------------------
-        group_out = QGroupBox("3. Folder Output dan Eksekusi")
+        group_out = QGroupBox("3. Output Folder and Execution")
         layout_out = QVBoxLayout(group_out)
         layout_out.setSpacing(10)
 
         row_folder = QHBoxLayout()
-        self.lbl_output = QLabel("Folder Output: (Belum dipilih)")
+        self.lbl_output = QLabel("Output Folder: (Not selected)")
         self.lbl_output.setObjectName("lblOutput")
-        btn_sel_output = QPushButton("Pilih Folder Output")
+        btn_sel_output = QPushButton("Select Output Folder")
         btn_sel_output.clicked.connect(self.select_output_dir)
         row_folder.addWidget(self.lbl_output, stretch=1)
         row_folder.addWidget(btn_sel_output)
         layout_out.addLayout(row_folder)
 
-        # Tombol Aksi
+        # Action Buttons
         row_actions = QHBoxLayout()
         row_actions.setSpacing(8)
-        self.btn_convert = QPushButton("Mulai Konversi")
+        self.btn_convert = QPushButton("Start Conversion")
         self.btn_convert.setObjectName("btnConvert")
         self.btn_convert.clicked.connect(self.start_conversion)
 
-        self.btn_cancel = QPushButton("Batalkan")
+        self.btn_cancel = QPushButton("Cancel")
         self.btn_cancel.setObjectName("btnCancel")
         self.btn_cancel.setEnabled(False)
         self.btn_cancel.clicked.connect(self.cancel_conversion)
 
-        self.btn_open_out = QPushButton("Buka Folder Hasil")
+        self.btn_open_out = QPushButton("Open Output Folder")
         self.btn_open_out.clicked.connect(self.open_output_folder)
 
         row_actions.addWidget(self.btn_convert)
@@ -494,10 +494,10 @@ class MainWindow(QMainWindow):
         self.log_area = QTextEdit()
         self.log_area.setReadOnly(True)
         self.log_area.setMinimumHeight(140)
-        self.log_area.setPlaceholderText("Log proses konversi akan muncul di sini...")
+        self.log_area.setPlaceholderText("Conversion logs will appear here...")
         main_layout.addWidget(self.log_area, stretch=2)
 
-        self.statusBar().showMessage("Siap. Silakan pilih atau drop file GIS.")
+        self.statusBar().showMessage("Ready. Please select or drop GIS files.")
 
     def apply_styles(self):
         self.setStyleSheet("""
@@ -729,13 +729,13 @@ class MainWindow(QMainWindow):
         self.txt_custom_epsg.setVisible(val == "CUSTOM")
 
     def add_files_dialog(self):
-        ext_filter = "Format GIS (*.shp *.tab *.mif *.geojson *.json *.gpkg *.kml *.kmz *.gpx *.dxf *.fgb *.csv *.zip);;All Files (*.*)"
-        files, _ = QFileDialog.getOpenFileNames(self, "Pilih File GIS", "", ext_filter)
+        ext_filter = "GIS Formats (*.shp *.tab *.mif *.geojson *.json *.gpkg *.kml *.kmz *.gpx *.dxf *.fgb *.csv *.zip);;All Files (*.*)"
+        files, _ = QFileDialog.getOpenFileNames(self, "Select GIS Files", "", ext_filter)
         for f in files:
             self.add_single_file(f)
 
     def add_folder_dialog(self):
-        dir_path = QFileDialog.getExistingDirectory(self, "Pilih Folder GIS")
+        dir_path = QFileDialog.getExistingDirectory(self, "Select GIS Folder")
         if dir_path:
             self.add_directory_recursive(dir_path)
 
@@ -767,42 +767,42 @@ class MainWindow(QMainWindow):
         item = QListWidgetItem(f"{file_p.name}   [{format_name}]   ({size_str})")
         item.setToolTip(file_path)
         self.file_list_widget.addItem(item)
-        self.statusBar().showMessage(f"Total: {len(self.input_files)} file terpilih")
+        self.statusBar().showMessage(f"Total: {len(self.input_files)} file(s) selected")
 
     def remove_selected(self):
         for item in self.file_list_widget.selectedItems():
             row = self.file_list_widget.row(item)
             self.file_list_widget.takeItem(row)
             self.input_files.pop(row)
-        self.statusBar().showMessage(f"Total: {len(self.input_files)} file terpilih")
+        self.statusBar().showMessage(f"Total: {len(self.input_files)} file(s) selected")
 
     def clear_all(self):
         self.input_files.clear()
         self.file_list_widget.clear()
-        self.statusBar().showMessage("Daftar file dikosongkan.")
+        self.statusBar().showMessage("File list cleared.")
 
     def select_output_dir(self):
-        dir_path = QFileDialog.getExistingDirectory(self, "Pilih Folder Output")
+        dir_path = QFileDialog.getExistingDirectory(self, "Select Output Folder")
         if dir_path:
             self.output_dir = dir_path
-            self.lbl_output.setText(f"Folder Output: {dir_path}")
+            self.lbl_output.setText(f"Output Folder: {dir_path}")
 
     # ============================================================
     # EXECUTION & THREAD MANAGEMENT
     # ============================================================
     def start_conversion(self):
         if not self.input_files:
-            QMessageBox.warning(self, "Peringatan", "Belum ada file yang dipilih!")
+            QMessageBox.warning(self, "Warning", "No files selected!")
             return
         if not self.output_dir:
-            QMessageBox.warning(self, "Peringatan", "Pilih folder output terlebih dahulu!")
+            QMessageBox.warning(self, "Warning", "Please select an output folder first!")
             return
 
         crs_val = self.combo_crs.currentData()
         if crs_val == "CUSTOM":
             custom_code = self.txt_custom_epsg.text().strip()
             if not custom_code:
-                QMessageBox.warning(self, "Peringatan", "Masukkan kode EPSG kustom (misal EPSG:32748)!")
+                QMessageBox.warning(self, "Warning", "Please enter a custom EPSG code (e.g. EPSG:32748)!")
                 return
             if not custom_code.upper().startswith("EPSG:") and custom_code.isdigit():
                 custom_code = f"EPSG:{custom_code}"
@@ -834,7 +834,7 @@ class MainWindow(QMainWindow):
     def cancel_conversion(self):
         if self.thread and self.thread.isRunning():
             self.thread.cancel()
-            self.log_area.append("[BATAL] Mengirim sinyal pembatalan...")
+            self.log_area.append("[CANCEL] Sending cancellation signal...")
 
     def on_conversion_finished(self, success, message):
         self.btn_convert.setEnabled(True)
@@ -843,15 +843,15 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(message)
 
         if success:
-            QMessageBox.information(self, "Konversi Selesai", message)
+            QMessageBox.information(self, "Conversion Finished", message)
         else:
-            QMessageBox.warning(self, "Info Konversi", message)
+            QMessageBox.warning(self, "Conversion Info", message)
 
     def open_output_folder(self):
         if self.output_dir and os.path.exists(self.output_dir):
             QDesktopServices.openUrl(QUrl.fromLocalFile(self.output_dir))
         else:
-            QMessageBox.warning(self, "Error", "Folder output belum dipilih atau tidak ditemukan.")
+            QMessageBox.warning(self, "Error", "Output folder is not selected or does not exist.")
 
 
 # ============================================================

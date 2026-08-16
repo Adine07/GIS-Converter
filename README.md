@@ -1,47 +1,47 @@
-# 🗺️ Universal GIS Vector Converter Desktop
+# Universal GIS Vector Converter Desktop
 
-Aplikasi desktop modern berbasis Python dan PySide6 untuk konversi multi-arah (*Any-to-Any*) berbagai format data spasial/GIS vektor dengan dukungan sistem koordinat (CRS) kustom dan akselerasi performa tinggi.
+A modern desktop application built with Python and PySide6 for multi-directional (Any-to-Any) conversion of various spatial/GIS vector data formats with support for custom coordinate reference systems (CRS) and high-performance acceleration.
 
 ---
 
-## ✨ Fitur Unggulan
+## Key Features
 
-- **Dukungan Format Luas (Any-to-Any)**:
-  - **Input**: Shapefile (`.shp`), MapInfo (`.tab`, `.mif`), GeoJSON (`.geojson`, `.json`), GeoPackage (`.gpkg`), KML/KMZ (`.kml`, `.kmz`), GPX (`.gpx`), AutoCAD DXF (`.dxf`), FlatGeobuf (`.fgb`), CSV (`.csv` dengan koordinat lon/lat atau WKT), serta **Arsip ZIP (`.zip`)**.
-  - **Output**: GeoJSON, ESRI Shapefile, GeoPackage (`.gpkg`), MapInfo TAB, KML, FlatGeobuf, dan CSV (WKT).
-- **Auto-Detect Arsip ZIP**: Drag & drop file `.zip` (misal arsip Shapefile lengkap) langsung diproses secara otomatis.
-- **Sistem Koordinat (CRS) & Reprojection**:
-  - Pertahankan CRS Asli (*Keep Original*).
-  - WGS 84 (`EPSG:4326`) untuk GPS / Web GeoJSON.
-  - Web Mercator (`EPSG:3857`) untuk peta online (Google Maps, OSM).
-  - Preset UTM Indonesia (Zone 46S s/d 54S).
+- **Comprehensive Format Support (Any-to-Any)**:
+  - **Input**: Shapefile (`.shp`), MapInfo (`.tab`, `.mif`), GeoJSON (`.geojson`, `.json`), GeoPackage (`.gpkg`), KML/KMZ (`.kml`, `.kmz`), GPX (`.gpx`), AutoCAD DXF (`.dxf`), FlatGeobuf (`.fgb`), CSV (`.csv` with lon/lat coordinates or WKT), and **ZIP Archives (`.zip`)**.
+  - **Output**: GeoJSON, ESRI Shapefile, GeoPackage (`.gpkg`), MapInfo TAB, KML, FlatGeobuf, and CSV (WKT).
+- **Automatic ZIP Archive Detection**: Drag and drop `.zip` files (such as complete Shapefile archives) for automatic processing.
+- **Coordinate Reference System (CRS) and Reprojection**:
+  - Preserve original CRS.
+  - WGS 84 (`EPSG:4326`) for GPS and Web GeoJSON.
+  - Web Mercator (`EPSG:3857`) for online maps (Google Maps, OSM).
+  - Indonesian UTM presets (Zone 46S to 54S).
   - Custom EPSG code input.
-- **Dukungan Encoding Atribut**: UTF-8, Windows-1252 / CP1252 (untuk Shapefile lawas), dan ISO-8859-1.
-- **Performa Cepat**: Didukung oleh engine `pyogrio` & `GDAL` untuk pembacaan dan penulisan dataset besar.
-- **Cross-Platform**: Menggunakan Qt Desktop Services untuk membuka folder hasil di Linux, Windows, maupun macOS.
-- **Fitur Batal / Cancel**: Pembatalan proses batch di tengah jalan tanpa membuat aplikasi hang.
+- **Attribute Encoding Support**: UTF-8, Windows-1252 / CP1252 (for legacy Shapefiles), and ISO-8859-1.
+- **High Performance**: Powered by `pyogrio` and `GDAL` engines for efficient reading and writing of large datasets.
+- **Cross-Platform Compatibility**: Uses Qt Desktop Services to open output folders on Linux, Windows, and macOS.
+- **Batch Cancellation**: Ability to cancel batch processes without application freezing.
 
 ---
 
-## 🛠️ Prasyarat & Instalasi
+## Requirements and Installation
 
-### 1. Prasyarat Sistem
-- Python 3.10+ (direkomendasikan Python 3.12)
-- Linux / Windows / macOS
+### 1. System Requirements
+- Python 3.10 or higher (Python 3.12 recommended)
+- Linux, Windows, or macOS
 
-### 2. Setup Virtual Environment
+### 2. Virtual Environment Setup
 
-1. Masuk ke direktori project:
+1. Navigate to the project directory:
    ```bash
    cd /home/lenovo/Projects/Geojson-converter
    ```
 
-2. Buat virtual environment:
+2. Create a virtual environment:
    ```bash
    python3 -m venv venv_gis
    ```
 
-3. Aktifkan virtual environment:
+3. Activate the virtual environment:
    - **Linux / macOS**:
      ```bash
      source venv_gis/bin/activate
@@ -59,28 +59,28 @@ Aplikasi desktop modern berbasis Python dan PySide6 untuk konversi multi-arah (*
 
 ---
 
-## 🚀 Menjalankan Aplikasi
+## Running the Application
 
-Pastikan virtual environment telah aktif, lalu jalankan:
+Ensure the virtual environment is activated, then run:
 
 ```bash
 python main.py
 ```
 
-### Cara Penggunaan:
-1. **Pilih File Input**: Drag & drop file atau klik tombol **Tambah File / ZIP** atau **Tambah Folder**.
-2. **Atur Target & CRS**:
-   - Pilih format output target (misal GeoJSON, GPKG, Shapefile, KML, dll).
-   - Pilih target CRS (misal WGS 84 `EPSG:4326` atau UTM Zone).
-   - Pilih encoding atribut bila diperlukan.
-3. **Pilih Folder Output**: Tentukan folder penyimpanan hasil.
-4. **Mulai Konversi**: Klik **Mulai Konversi**. Log status dan progress bar akan memantau proses secara *real-time*.
+### Usage Instructions:
+1. **Select Input Files**: Drag and drop files or click **Add File/ZIP** or **Add Folder** button.
+2. **Configure Target Format and CRS**:
+   - Select the output format (e.g., GeoJSON, GPKG, Shapefile, KML, etc.).
+   - Select the target CRS (e.g., WGS 84 `EPSG:4326` or UTM Zone).
+   - Select attribute encoding if required.
+3. **Select Output Folder**: Specify the folder where results will be saved.
+4. **Start Conversion**: Click **Start Conversion**. Status log and progress bar will monitor the process in real-time.
 
 ---
 
-## 📦 Format File yang Didukung
+## Supported File Formats
 
-| Format | Ekstensi Input | Driver Output |
+| Format | Input Extension | Output Driver |
 | :--- | :--- | :--- |
 | **ESRI Shapefile** | `.shp`, `.zip` | `ESRI Shapefile` |
 | **MapInfo** | `.tab`, `.mif` | `MapInfo File` |
@@ -91,4 +91,4 @@ python main.py
 | **AutoCAD DXF** | `.dxf` | - |
 | **FlatGeobuf** | `.fgb` | `FlatGeobuf` |
 | **CSV Coordinates / WKT**| `.csv` | `CSV` (with WKT) |
-| **Arsip ZIP** | `.zip` | Diekstrak otomatis |
+| **ZIP Archive** | `.zip` | Automatically extracted |
